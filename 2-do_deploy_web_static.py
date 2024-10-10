@@ -1,56 +1,33 @@
 #!/usr/bin/python3
-"""Compress web static package
-"""
-from fabric.api import run, put, env
-from os import path
+"""Fabric function sends archived static site to webservers"""
 
-env.hosts = ['18.209.20.255', '34.73.76.135']
-env.user = 'ubuntu'
-env.key_filename = '~/.ssh/id_rsa'
+
+from fabric.api import put, run, env
+from os.path import exists
+# remotely exexutes commands in both servers if run in one of them.
+env.hosts = ["54.205.210.29", "54.172.238.0"]
 
 
 def do_deploy(archive_path):
-    """Deploy web files to server"""
+    """Archives to web-servers"""
+    if exists(archive_path) is False:
+        return False
+    # If archive isn't even there archive nothing
     try:
-        if not path.exists(archive_path):
-            return False
-
-        # Upload archive
+        file_n = archive_path.split("/")[-1]
+        no_ext = file_n.split(".")[0]
+        path = "/data/web_static/releases/"
+        # uploads archived folder to /tmp/
         put(archive_path, '/tmp/')
 
-        # Create target dir
-        timestamp = archive_path[-18:-4]
-        run('sudo mkdir -p /data/web_static/releases/web_static_{}/'
-            .format(timestamp))
-
-        # Uncompress archive and delete .tgz
-        run('sudo tar -xzf /tmp/web_static_{}.tgz -C '
-            '/data/web_static/releases/web_static_{}/'
-            .format(timestamp, timestamp))
-
-        # Remove archive
-        run('sudo rm /tmp/web_static_{}.tgz'
-            .format(timestamp))
-
-        # Move contents into host web_static
-        run('sudo mv /data/web_static/releases/web_static_{}/web_static/* '
-            '/data/web_static/releases/web_static_{}/'
-            .format(timestamp, timestamp))
-
-        # Remove extraneous web_static dir
-        run('sudo rm -rf /data/web_static/releases/web_static_{}/web_static'
-            .format(timestamp))
-
-        # Delete pre-existing sym link
-        run('sudo rm -rf /data/web_static/current')
-
-        # Re-establish symbolic link
-        run('sudo ln -s /data/web_static/releases/web_static_{}/ '
-            '/data/web_static/current'
-            .format(timestamp))
-    except Exception as e:
-        print("Exception:", e)
+# commands to uncompress folder, delete compressed, delete link
+        run('mkdir -p {}{}/'.format(path, no_ext))
+        run('tar -xzf /tmp/{} -C {}{}/'.format(file_n, path, no_ext))
+        run('rm /tmp/{}'.format(file_n))
+        run('mv {0}{1}/web_static/* {0}{1}/'.format(path, no_ext))
+        run('rm -rf {}{}/web_static'.format(path, no_ext))
+        run('rm -rf /data/web_static/current')
+        run('ln -s {}{}/ /data/web_static/current'.format(path, no_ext))
+        return True
+    except BaseException:
         return False
-
-    # Return True on success
-    return True
