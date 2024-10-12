@@ -5,7 +5,7 @@
 from fabric.api import put, run, env
 from os.path import exists
 # remotely exexutes commands in both servers if run in one of them.
-env.hosts = ["54.159.37.237", "54.90.3.106"]
+env.hosts = ["54.234.223.92", "98.84.112.27"]
 
 
 def do_deploy(archive_path):
