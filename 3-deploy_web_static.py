@@ -12,7 +12,7 @@ from datetime import datetime
 from os.path import exists, isdir
 import os
 
-hosts = ['54.159.37.237', '54.90.3.106']
+hosts = ['98.84.112.27', '54.234.223.92']
 
 @task
 def do_pack():
